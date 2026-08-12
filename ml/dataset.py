@@ -2,16 +2,17 @@ import torch
 from torch.utils.data import random_split, DataLoader, Subset
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
+from config import IMAGE_SIZE, DATA_DIR, BATCH_SIZE
 
 transform = transforms.Compose([
-    transforms.Resize((256, 256)),
+    transforms.Resize(IMAGE_SIZE),
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
 ])
 
 def get_dataloaders(
-    data_dir: str,
-    batch_size: tuple[int, int, int]
+    data_dir: str = DATA_DIR,
+    batch_size: tuple[int, int, int] = BATCH_SIZE,
 ):
     full_dataset = ImageFolder(root=data_dir, transform=transform)
 
