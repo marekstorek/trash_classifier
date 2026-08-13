@@ -2,3 +2,9 @@
 
 *.pt
 *.pth
+
+.data/
+*.jpg
+*.jpeg
+*.png
+*.log
