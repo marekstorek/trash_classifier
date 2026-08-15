@@ -1,3 +1,4 @@
+from dataclasses import dataclass, field
 from torch import nn
 from torch.utils.data import DataLoader
 from torch.optim import Optimizer
@@ -32,6 +33,7 @@ class Trainer:
 
         self.val_best_loss_total = float("inf")
         self.val_best_acc_total = 0.0
+        self.progress: list[Result] = []
 
         os.makedirs(self.save_dir, exist_ok=True)
 
@@ -49,8 +51,9 @@ class Trainer:
             self.logger.error(f"Model not found at {self.model_path}")
             raise
 
-    def train_one_epoch(self) -> float:
+    def train_one_epoch(self) -> tuple[float, float]:
         self.model.train(True)
+        correct = 0
         train_cum_loss = 0
         for i, data in enumerate(self.train_loader):
             inputs, labels = data
@@ -62,8 +65,10 @@ class Trainer:
             self.optimizer.step()
             mean_loss = loss.item()
             train_cum_loss += mean_loss * inputs.shape[0]
+            correct += (outputs.argmax(1) == labels).sum().item()
         train_avg_loss = train_cum_loss / len(self.train_loader.dataset)
-        return train_avg_loss
+        train_acc = correct / len(self.train_loader.dataset)
+        return train_avg_loss, train_acc
 
     def evaluate(
             self,
@@ -98,11 +103,13 @@ class Trainer:
         val_best_loss = float('inf')
         val_acc_with_best_loss = 0
 
+        self.progress: list[Result] = []
+
         self.logger.info(f"####################")
         self.logger.info(f"Training model: {self.model_name}")
         for epoch in range(max_epochs):
             self.logger.info(f"Epoch: {epoch + 1} / {max_epochs}")
-            train_avg_loss = self.train_one_epoch()
+            train_avg_loss, train_acc = self.train_one_epoch()
 
             val_loss, val_acc = self.validate()
             if self.scheduler is not None:
@@ -121,9 +128,26 @@ class Trainer:
             else:
                 epochs_from_best += 1
 
+            result = Result(train_acc, train_avg_loss, val_acc, val_loss)
+            self.progress.append(result)
+
             if epochs_from_best > patience:
                 self.logger.info(f"Interrupting training - no improvement in {epochs_from_best} epochs")
                 break
 
         self.load_best_model()
         return val_best_loss, val_acc_with_best_loss
+
+@dataclass
+class Result:
+    train_acc: float
+    train_loss: float
+    val_acc: float
+    val_loss: float
+
+@dataclass
+class Experiment:
+    model_name: str
+    model_cls: type[nn.Module]
+    kwargs: dict = field(default_factory = dict)
+    progress: list[Result] = field(default_factory = list)
