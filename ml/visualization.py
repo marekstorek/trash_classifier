@@ -56,9 +56,9 @@ def compare_models(
         best_acc = max(val_accs)
         label = f"{exp.model_name}  ({best_acc:.2f}%)"
 
-        line = ax1.plot(epochs, val_losses, label = label, linestyle = "-", marker = "o")[0]
+        line = ax1.plot(epochs, val_losses, label = label, linestyle = "-", marker = ".")[0]
         color = line.get_color()
-        ax2.plot(epochs, val_accs, label = label, linestyle = "-", marker = "o", color = color)
+        ax2.plot(epochs, val_accs, label = label, linestyle = "-", marker = ".", color = color)
 
         if show_train:
             ax1.plot(epochs, train_losses, linestyle = "--", alpha = 0.5, color = color)
