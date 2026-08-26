@@ -98,3 +98,38 @@ def summarize_results(
         )
     df_results = pd.DataFrame(summary).sort_values(by="Best Val Acc [%]", ascending=False)
     return df_results
+
+def plot_dropout_visualization(
+        experiments_bn: list[Experiment],
+        experiments_no_bn: list[Experiment],
+        title: str = "Comparison of Dropout Probability\non models with and without Batch Normalization"
+) -> None:
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize = (14, 5))
+    fig.suptitle(title, fontsize = 15)
+
+    ps_BN = [exp.kwargs.get("p") for exp in experiments_bn]
+    val_losses_BN = [min(r.val_loss for r in exp.progress) for exp in experiments_bn]
+    val_accs_BN = [max(r.val_acc for r in exp.progress) * 100 for exp in experiments_bn]
+
+    ps_no_BN = [exp.kwargs.get("p") for exp in experiments_no_bn]
+    val_losses_no_BN = [min(r.val_loss for r in exp.progress) for exp in experiments_no_bn]
+    val_accs_no_BN = [max(r.val_acc for r in exp.progress) * 100 for exp in experiments_no_bn]
+
+    ax1.plot(ps_BN, val_losses_BN, label = "with BN", linestyle = "-", marker = "o")
+    ax1.plot(ps_no_BN, val_losses_no_BN, label = "without BN", linestyle = "-", marker = "o")
+    ax1.set_xlabel("p (Dropout Probability)")
+    ax1.set_ylabel("Min Val Loss")
+    ax1.set_title("Dropout Probability vs Min Val Loss")
+    ax1.grid(linestyle = ":")
+    ax1.legend(framealpha = 0.5)
+
+    ax2.plot(ps_BN, val_accs_BN, label = "with BN", linestyle = "-", marker = "o")
+    ax2.plot(ps_no_BN, val_accs_no_BN, label = "without BN", linestyle = "-", marker = "o")
+    ax2.set_xlabel("p (Dropout Probability)")
+    ax2.set_ylabel("Max Val Accuracy [%]")
+    ax2.set_title("Dropout Probability vs Max Val Accuracy")
+    ax2.grid(linestyle = ":")
+    ax2.legend(framealpha = 0.5)
+
+    plt.tight_layout()
+    plt.show()
