@@ -5,6 +5,7 @@ from torch.optim import Optimizer
 import torch
 import logging
 import os
+from ml.config import PTH_SAVE_DIR
 
 class Trainer:
     def __init__(
@@ -18,7 +19,7 @@ class Trainer:
             device: torch.device,
             logger: logging.Logger,
             scheduler: torch.optim.lr_scheduler.LRScheduler = None,
-            save_dir:str = "models/saved_models",
+            save_dir:str = PTH_SAVE_DIR,
     ):
         self.model = model.to(device)
         self.model_name = model_name
@@ -39,7 +40,7 @@ class Trainer:
 
     @property
     def model_path(self) -> str:
-        return os.path.join(self.save_dir, f"{self.model_name}.pt")
+        return get_model_path(self.save_dir, self.model_name)
 
     def load_best_model(self):
         self.logger.info(f"Loading best model from {self.model_path}")
@@ -70,29 +71,8 @@ class Trainer:
         train_acc = correct / len(self.train_loader.dataset)
         return train_avg_loss, train_acc
 
-    def evaluate(
-            self,
-            loader: DataLoader,
-    )  -> (float, float):
-        self.model.train(False)
-        correct = 0
-        cum_loss = 0
-        for i, data in enumerate(loader):
-            inputs, labels = data
-            inputs, labels = inputs.to(self.device), labels.to(self.device)
-            with torch.no_grad():
-                outputs = self.model(inputs)
-                loss = self.loss_fn(outputs, labels)
-                mean_loss = loss.item()
-
-            cum_loss += mean_loss * inputs.shape[0]
-            correct += (outputs.argmax(1) == labels).sum().item()
-        avg_loss = cum_loss / len(loader.dataset)
-        accuracy = correct / len(loader.dataset)
-        return avg_loss, accuracy
-
     def validate(self) -> (float, float):
-        return self.evaluate(self.val_loader)
+        return evaluate(self.model, self.val_loader, self.loss_fn, self.device)
 
     def train_and_validate(
             self,
@@ -137,6 +117,33 @@ class Trainer:
 
         self.load_best_model()
         return val_best_loss, val_acc_with_best_loss
+
+def get_model_path(model_name: str, model_dir = PTH_SAVE_DIR):
+    return os.path.join(model_dir, f"{model_name}.pt")
+
+def evaluate(
+        model: nn.Module,
+        loader: DataLoader,
+        loss_fn: nn.Module,
+        device: torch.device,
+)  -> (float, float):
+    model = model.to(device)
+    model.train(False)
+    correct = 0
+    cum_loss = 0
+    for i, data in enumerate(loader):
+        inputs, labels = data
+        inputs, labels = inputs.to(device), labels.to(device)
+        with torch.no_grad():
+            outputs = model(inputs)
+            loss = loss_fn(outputs, labels)
+            mean_loss = loss.item()
+
+        cum_loss += mean_loss * inputs.shape[0]
+        correct += (outputs.argmax(1) == labels).sum().item()
+    avg_loss = cum_loss / len(loader.dataset)
+    accuracy = correct / len(loader.dataset)
+    return avg_loss, accuracy
 
 @dataclass
 class Result:
