@@ -2,6 +2,7 @@ import json
 from dataclasses import asdict
 
 from ml.train import Experiment, Result
+from ml.models import *
 
 def save_experiments(
         experiments: list[Experiment],
@@ -31,10 +32,11 @@ def load_experiments(
         data = json.load(f)
     experiments = []
     for item in data:
+        model_cls = globals()[item["model_cls"]]
         progress = [Result(**r) for r in item["progress"]]
         exp = Experiment(
             model_name = item["model_name"],
-            model_cls = None,
+            model_cls = model_cls,
             kwargs = item["kwargs"],
             progress = progress,
         )
