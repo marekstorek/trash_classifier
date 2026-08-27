@@ -1,5 +1,6 @@
 from torch import nn
 import torch.nn.functional as F
+from torchvision.models import ResNet18_Weights, resnet18
 from config import IMAGE_SIZE, NUM_CLASSES
 
 class Conv1Layer(nn.Module):
@@ -217,3 +218,21 @@ class Conv4LayerDropoutBN(nn.Module):
         x = self.dropout(x)
         x = self.fco(x)
         return x
+
+class MyResNet(nn.Module):
+    def __init__(self, p: float):
+        super().__init__()
+        weights = ResNet18_Weights.DEFAULT
+        self.model = resnet18(weights=weights)
+
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        in_features: int = self.model.fc.in_features
+        self.model.fc = nn.Sequential(
+            nn.Dropout(p=p), nn.Linear(in_features, NUM_CLASSES)
+        )
+
+    def forward(self, x):
+        return self.model(x)
+    
