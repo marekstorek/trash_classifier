@@ -46,3 +46,9 @@ def get_dataloaders(
     test_loader = DataLoader(test_data, batch_size=batch_size[2], shuffle=False, generator=generator)
 
     return train_loader, val_loader, test_loader
+
+def get_classes(
+    data_dir: str = DATA_DIR,
+) -> list[str]:
+    dataset = ImageFolder(root=data_dir)
+    return dataset.classes

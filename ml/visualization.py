@@ -1,6 +1,7 @@
 from ml.train import Result, Experiment
 import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 def plot_results(progress: list[Result], model_name: str, epoch_start: int = 0) -> None:
     epochs = range(1 + epoch_start, len(progress) + 1)
@@ -131,5 +132,17 @@ def plot_dropout_visualization(
     ax2.grid(linestyle = ":")
     ax2.legend(framealpha = 0.5)
 
+    plt.tight_layout()
+    plt.show()
+
+def plot_confusion_matrix(y_true, y_pred, class_names, title: str = "Confusion Matrix"):
+    fig, ax = plt.subplots(figsize=(7, 5))
+    cm = confusion_matrix(y_true, y_pred)
+    disp = ConfusionMatrixDisplay(
+        confusion_matrix=cm,
+        display_labels=class_names
+    )
+    disp.plot(ax=ax)
+    fig.suptitle(title)
     plt.tight_layout()
     plt.show()

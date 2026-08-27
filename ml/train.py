@@ -145,6 +145,30 @@ def evaluate(
     accuracy = correct / len(loader.dataset)
     return avg_loss, accuracy
 
+def predict(
+        model: nn.Module,
+        loader: DataLoader,
+        device: torch.device,
+) -> tuple[list[int], list[int]]:
+    model = model.to(device)
+    model.train(False)
+
+    all_y_pred = []
+    all_y_true = []
+
+    with torch.no_grad():
+        for inputs, labels in loader:
+            inputs = inputs.to(device)
+            labels = labels.to(device)
+
+            outputs = model(inputs)
+            preds = outputs.argmax(dim=1)
+
+            all_y_pred.extend(preds.cpu().numpy())
+            all_y_true.extend(labels.cpu().numpy())
+
+    return all_y_pred, all_y_true
+
 @dataclass
 class Result:
     train_acc: float
