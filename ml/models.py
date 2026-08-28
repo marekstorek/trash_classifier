@@ -1,7 +1,7 @@
 from torch import nn
 import torch.nn.functional as F
 from torchvision.models import ResNet18_Weights, resnet18
-from config import IMAGE_SIZE, NUM_CLASSES
+from ml.config import IMAGE_SIZE, NUM_CLASSES
 
 class Conv1Layer(nn.Module):
     def __init__(self, n1: int, kernel_size: int = 3):

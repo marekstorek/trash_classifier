@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import random_split, DataLoader, Subset
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
-from config import IMAGE_SIZE, DATA_DIR, BATCH_SIZE
+from ml.config import IMAGE_SIZE, DATA_DIR, BATCH_SIZE
 
 basic_transform = transforms.Compose([
     transforms.Resize(IMAGE_SIZE),
