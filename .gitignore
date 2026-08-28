@@ -3,8 +3,12 @@
 *.pt
 *.pth
 
-.data/
+.ml/data/
 *.jpg
 *.jpeg
 *.png
 *.log
+
+.DS_Store
+
+*/__pycache__/

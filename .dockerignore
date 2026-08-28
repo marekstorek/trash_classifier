@@ -1,5 +1,8 @@
 .venv
 .gitignore
+.git/
+.DS_Store
+.idea
 
 ml/data/
 
