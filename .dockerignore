@@ -1,0 +1,14 @@
+.venv
+.gitignore
+
+ml/data/
+
+#ignore all models except the two we truly use
+ml/models/saved_models/*
+!ml/models/saved_models/ResNet_p=0.0.pt
+!ml/models/saved_models/Conv4_32_64_128_256_Augment.pt
+
+ml/experiments.ipynb
+ml/experiments.json
+ml/logger.log
+ml/visualization.py

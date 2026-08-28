@@ -61,7 +61,7 @@ def load_model(model_name: str) -> torch.nn.Module:
     model_path = get_model_path(model_name = model_name)
 
     model = model_cls(**model_kwargs)
-    model.load_state_dict(torch.load(model_path))
+    model.load_state_dict(torch.load(model_path, map_location="cpu"))
     model.train(False)
     return model
 
