@@ -1,4 +1,4 @@
-package com.example.trashnetclassifier
+package com.example.trashnetclassifier.presentation.main
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -10,7 +10,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-
+            Navigation()
         }
     }
 }

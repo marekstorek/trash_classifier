@@ -1,4 +1,4 @@
-package com.example.trashnetclassifier.ui.theme
+package com.example.trashnetclassifier.presentation.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
