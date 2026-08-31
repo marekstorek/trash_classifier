@@ -1,5 +1,6 @@
 from ml.dataset import basic_transform
 from ml.models import Conv4LayerDropout, MyResNet
+from ml.constants import *
 
 import torch
 import torch.nn as nn
@@ -15,8 +16,6 @@ RESNET_MODEL_NAME = "ResNet_p=0.0"
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 PTH_SAVE_DIR = PROJECT_ROOT / "ml" / "models" / "saved_models"
-
-CLASS_NAMES = ["cardboard", "glass", "metal", "paper", "plastic", "trash"]
 
 models_used: list[nn.Module] = []
 models_used_names: list[str] = []
@@ -75,13 +74,39 @@ async def predict(file: UploadFile) -> dict:
     x = basic_transform(img).unsqueeze(0)
 
     output = {}
+    results = []
     for i, model in enumerate(models_used):
         with torch.no_grad():
             y = model(x)
             probabilities = torch.nn.functional.softmax(y, dim=1).squeeze().tolist()
-            result = {
-                "probabilities": probabilities,
-                "classes": CLASS_NAMES,
-            }
-            output[models_used_product_name[i]] = result
+            assert len(CLASS_NAMES) == NUM_CLASSES and len(CLASS_NAMES) == len(probabilities)
+
+            mapped_probabilities = dict(zip(CLASS_NAMES, probabilities))
+            result = {}
+            result["model_name"] = models_used_product_name[i]
+            result["result"] = mapped_probabilities
+
+            results.append(result)
+
+    output["response"] = results
     return output
+
+# Response example
+# {
+#  "response" : [
+#         {
+#             "model_name": "ResNet",
+#             "result": {
+#                 "Carboard": 0.141,
+#                 "Glass": 0.54
+#             }
+#         },
+#         {
+#             "model_name" : "Basic",
+#             "result" : {
+#                 "Carboard" : 0.41,
+#                 "Glass" : 0.24
+#             }
+#         }
+#     ]
+# }

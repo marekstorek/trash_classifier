@@ -5,7 +5,7 @@ from torch.optim import Optimizer
 import torch
 import logging
 import os
-from ml.config import PTH_SAVE_DIR
+from ml.constants import PTH_SAVE_DIR
 
 class Trainer:
     def __init__(
