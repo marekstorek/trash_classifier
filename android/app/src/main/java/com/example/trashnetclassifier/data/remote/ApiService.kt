@@ -1,5 +1,6 @@
-package com.example.trashnetclassifier
+package com.example.trashnetclassifier.data.remote
 
+import com.example.trashnetclassifier.domain.model.PredictResponse
 import okhttp3.MultipartBody
 import retrofit2.http.Multipart
 import retrofit2.http.POST

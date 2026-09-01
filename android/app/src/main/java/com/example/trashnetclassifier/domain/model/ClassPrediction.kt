@@ -1,4 +1,4 @@
-package com.example.trashnetclassifier
+package com.example.trashnetclassifier.domain.model
 
 data class ClassPrediction(
     val className: String,

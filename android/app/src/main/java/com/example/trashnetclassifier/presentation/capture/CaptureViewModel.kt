@@ -3,8 +3,8 @@ package com.example.trashnetclassifier.presentation.capture
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.trashnetclassifier.ExperimentRepository
-import com.example.trashnetclassifier.ModelResult
+import com.example.trashnetclassifier.data.repository.ExperimentRepository
+import com.example.trashnetclassifier.domain.model.ModelResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

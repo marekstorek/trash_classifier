@@ -1,4 +1,4 @@
-package com.example.trashnetclassifier
+package com.example.trashnetclassifier.domain.model
 
 import com.google.gson.annotations.SerializedName
 

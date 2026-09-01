@@ -27,8 +27,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.trashnetclassifier.ClassPrediction
-import com.example.trashnetclassifier.ModelResult
+import com.example.trashnetclassifier.domain.model.ClassPrediction
+import com.example.trashnetclassifier.domain.model.ModelResult
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

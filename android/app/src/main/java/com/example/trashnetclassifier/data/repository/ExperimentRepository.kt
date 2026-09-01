@@ -1,6 +1,8 @@
-package com.example.trashnetclassifier
+package com.example.trashnetclassifier.data.repository
 
 import android.graphics.Bitmap
+import com.example.trashnetclassifier.domain.model.ModelResult
+import com.example.trashnetclassifier.domain.model.PredictResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
