@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -51,13 +52,22 @@ fun CapturedImagePreview(
             CircularProgressIndicator(color = Color.White)
         } else {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(0.85f),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                OutlinedButton(onClick = onRetake) {
-                    Text("Retake", color = Color.White)
+                OutlinedButton(
+                    modifier = Modifier.weight(1f),
+                    onClick = onRetake,
+                ) {
+                    Text("Retake")
                 }
-                Button(onClick = onSend) {
+
+                Spacer(Modifier.width(12.dp))
+
+                Button(
+                    modifier = Modifier.weight(1f),
+                    onClick = onSend,
+                ) {
                     Text("Send to Server")
                 }
             }
