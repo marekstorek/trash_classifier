@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -19,13 +20,24 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.CloudUpload
 import androidx.compose.material.icons.rounded.Memory
+import androidx.compose.material.icons.rounded.PhotoCamera
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,6 +52,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.trashnetclassifier.domain.model.ClassPrediction
 import com.example.trashnetclassifier.domain.model.ModelResult
 
@@ -47,6 +60,9 @@ import com.example.trashnetclassifier.domain.model.ModelResult
 @Composable
 fun PredictionResultView(
     state: CaptureUiState.ClassificationResult,
+    onConfirmPrediction: () -> Unit,
+    onCorrectLabelSelected: (String) -> Unit,
+    onScanAgain: () -> Unit,
 ) {
     val scrollState = rememberScrollState()
 
@@ -85,6 +101,15 @@ fun PredictionResultView(
         state.modelResults.forEach { modelResult ->
             ModelResultCard(modelResult)
         }
+        Spacer(modifier = Modifier.height(16.dp))
+        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+        Spacer(modifier = Modifier.height(24.dp))
+        PredictionUserFeedBackView(
+            state = state,
+            onConfirmPrediction = onConfirmPrediction,
+            onCorrectLabelSelected = onCorrectLabelSelected,
+            onScanAgain = onScanAgain,
+        )
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
@@ -173,5 +198,179 @@ private fun ClassPredictionProgressIndicator(
             color = if (isTopPrediction) MaterialTheme.colorScheme.primary else Color.LightGray,
             trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
         )
+    }
+}
+
+@Composable
+private fun PredictionUserFeedBackView(
+    state: CaptureUiState.ClassificationResult,
+    onConfirmPrediction: () -> Unit,
+    onCorrectLabelSelected: (String) -> Unit,
+    onScanAgain: () -> Unit,
+) {
+    var isWrong by remember { mutableStateOf(false) }
+    val submitted = state.correctClass != null
+
+    if (submitted) {
+        UserConfirmedView(
+            isWrong = isWrong,
+            onScanAgain = onScanAgain,
+        )
+    } else if (!isWrong) {
+        WaitingForUserConfirmationView(
+            mostTrustedClassName = state.mostTrustedClassName,
+            onSetIsWrong = {
+                isWrong = true
+            },
+            onConfirmPrediction = onConfirmPrediction,
+        )
+    } else {
+        val trashNetClasses = state.modelResults.firstOrNull()?.results?.map { it.className } ?: emptyList()
+        WaitingForUserCorrectionView(
+            trashNetClasses = trashNetClasses,
+            mostTrustedClassName = state.mostTrustedClassName,
+            onCorrectLabelSelected = onCorrectLabelSelected,
+        )
+    }
+}
+
+@Composable
+private fun UserConfirmedView(
+    isWrong: Boolean,
+    onScanAgain: () -> Unit,
+){
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
+    ) {
+        Text(
+            text = if (!isWrong) "Thank you for your confirmation!" else "Thank you for your correction!",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Icon(
+            imageVector = Icons.Default.CheckCircle,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(56.dp)
+        )
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        Button(
+            onClick = onScanAgain,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(Icons.Rounded.PhotoCamera, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Scan Another Item", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun WaitingForUserConfirmationView(
+    mostTrustedClassName: String,
+    onSetIsWrong: () -> Unit,
+    onConfirmPrediction: () -> Unit,
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = "Is this ${mostTrustedClassName}?",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            OutlinedButton(
+                onClick = { onSetIsWrong() },
+                modifier = Modifier.weight(1f).height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+            ) {
+                Icon(Icons.Rounded.Close, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Incorrect")
+            }
+
+            Button(
+                onClick = {
+                    onConfirmPrediction()
+                },
+                modifier = Modifier.weight(1f).height(56.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(Icons.Rounded.Check, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Correct")
+            }
+        }
+    }
+}
+
+@Composable
+private fun WaitingForUserCorrectionView(
+    trashNetClasses: List<String>,
+    mostTrustedClassName: String,
+    onCorrectLabelSelected: (String) -> Unit,
+) {
+    var selectedLabel by remember { mutableStateOf<String?>(null) }
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = "What is the actual material?",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            trashNetClasses.forEach { actualClass ->
+                val isOriginalWrong = actualClass.equals(mostTrustedClassName, ignoreCase = true)
+                val isSelected = selectedLabel.equals(actualClass, ignoreCase = true)
+
+                FilterChip(
+                    selected = isSelected,
+                    enabled = !isOriginalWrong,
+                    onClick = { selectedLabel = actualClass },
+                    label = { Text(actualClass) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(
+            onClick = {
+                selectedLabel?.let { label ->
+                    onCorrectLabelSelected(label.lowercase())
+                }
+            },
+            enabled = selectedLabel != null,
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = RoundedCornerShape(12.dp),
+        ) {
+            Icon(Icons.Rounded.CloudUpload, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Submit Correction", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
     }
 }

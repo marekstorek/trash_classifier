@@ -69,6 +69,15 @@ fun CaptureScreen(
                 is CaptureUiState.ClassificationResult -> {
                     PredictionResultView(
                         state = state,
+                        onConfirmPrediction = {
+                            viewModel.confirmPrediction()
+                        },
+                        onCorrectLabelSelected = { trueLabel ->
+                            viewModel.submitLabelCorrection(trueLabel)
+                        },
+                        onScanAgain = {
+                            viewModel.resetToCamera()
+                        }
                     )
                 }
             }

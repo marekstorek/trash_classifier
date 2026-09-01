@@ -23,7 +23,15 @@ sealed interface CaptureUiState {
     data class ClassificationResult (
         val bitmap: Bitmap,
         val modelResults: List<ModelResult>,
-    ) : CaptureUiState
+        var correctClass: String? = null,
+        val isCorrect: Boolean? = null
+    ) : CaptureUiState {
+        val mostTrustedClassName: String
+            get() {
+                val mostTrustedModelResult = modelResults.maxBy { it.bestResult.confidence }
+                return mostTrustedModelResult.bestResult.className
+            }
+    }
 }
 
 class CaptureViewModel(
@@ -82,6 +90,28 @@ class CaptureViewModel(
                     errorMessage = error.localizedMessage ?: "Failed to upload image"
                 )
             }
+        }
+    }
+
+    fun confirmPrediction() {
+        val currentState = _uiState.value
+        if (currentState !is CaptureUiState.ClassificationResult) return
+
+        _uiState.value = currentState.copy(correctClass = currentState.mostTrustedClassName, isCorrect = true)
+
+        viewModelScope.launch {
+            // TODO Save user correction locally
+        }
+    }
+
+    fun submitLabelCorrection(trueLabel: String) {
+        val currentState = _uiState.value
+        if (currentState !is CaptureUiState.ClassificationResult) return
+
+        _uiState.value = currentState.copy(correctClass = trueLabel, isCorrect = false)
+
+        viewModelScope.launch {
+            // TODO Save user correction locally
         }
     }
 }
