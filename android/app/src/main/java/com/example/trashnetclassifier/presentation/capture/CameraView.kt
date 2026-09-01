@@ -1,6 +1,7 @@
 package com.example.trashnetclassifier.presentation.capture
 
 import android.graphics.Bitmap
+import android.graphics.Matrix
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -36,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.scale
 import androidx.lifecycle.compose.LocalLifecycleOwner
 
 @Composable
@@ -90,8 +92,10 @@ fun CameraView(
                     imageCapture.takePicture(executor, object : ImageCapture.OnImageCapturedCallback() {
                         override fun onCaptureSuccess(imageProxy: ImageProxy) {
                             val bitmap = imageProxy.toBitmap()
+                            val cropped = cropToCenterSquare(bitmap, imageProxy.imageInfo.rotationDegrees)
+                            val resized = cropped.scale(256, 256)
                             imageProxy.close()
-                            onPhotoCaptured(bitmap)
+                            onPhotoCaptured(resized)
                         }
                         override fun onError(exception: ImageCaptureException) {
                             // imageProxyCloseFallback(exception)
@@ -107,4 +111,15 @@ fun CameraView(
 
         }
     }
+}
+
+fun cropToCenterSquare(srcBmp: Bitmap, rotationDegrees: Int): Bitmap {
+    val matrix = Matrix().apply { postRotate(rotationDegrees.toFloat()) }
+    val rotated = Bitmap.createBitmap(srcBmp, 0, 0, srcBmp.width, srcBmp.height, matrix, true)
+
+    val edge = minOf(rotated.width, rotated.height)
+    val xOffset = (rotated.width - edge) / 2
+    val yOffset = (rotated.height - edge) / 2
+
+    return Bitmap.createBitmap(rotated, xOffset, yOffset, edge, edge)
 }
