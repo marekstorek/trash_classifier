@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.trashnetclassifier.presentation.capture.CaptureScreen
 import com.example.trashnetclassifier.presentation.home.HomeScreen
 
 @Composable
@@ -15,11 +16,18 @@ fun Navigation(
         composable<Screen.Home> {
             HomeScreen(
                 onNavigateToCamera = {
-
+                    navController.navigate(Screen.Capture)
                 },
                 onNavigateToHistory = {
 
                 }
+            )
+        }
+        composable<Screen.Capture> {
+            CaptureScreen(
+                onBack = {
+                    navController.navigateUp()
+                },
             )
         }
     }
