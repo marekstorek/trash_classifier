@@ -8,16 +8,24 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -33,6 +41,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 @Composable
 fun CameraView(
     onPhotoCaptured: (Bitmap) -> Unit,
+    onOpenGallery: () -> Unit,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -53,6 +62,15 @@ fun CameraView(
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
 
+        // 1:1 Square Visual Guide
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .aspectRatio(1f)
+                .align(Alignment.Center)
+                .border(2.dp, Color.White.copy(alpha = 0.8f), RoundedCornerShape(8.dp))
+        )
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -61,6 +79,10 @@ fun CameraView(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            IconButton(onClick = onOpenGallery) {
+                Icon(Icons.Default.PhotoLibrary, contentDescription = "Gallery", tint = Color.White)
+            }
+
             // Capture Shutter
             Button(
                 onClick = {
@@ -80,6 +102,9 @@ fun CameraView(
                 colors = ButtonDefaults.buttonColors(containerColor = Color.White),
                 modifier = Modifier.size(72.dp)
             ) {}
+
+            Spacer(modifier = Modifier.size(48.dp))
+
         }
     }
 }

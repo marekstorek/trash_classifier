@@ -1,6 +1,9 @@
 package com.example.trashnetclassifier.presentation.capture
 
+import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.ImageDecoder
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.trashnetclassifier.data.repository.ExperimentRepository
@@ -32,6 +35,31 @@ class CaptureViewModel(
 
     fun onPhotoCaptured(bitmap: Bitmap) {
         _uiState.value = CaptureUiState.Preview(bitmap = bitmap)
+    }
+
+    fun onImageSelected(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            val bitmap = loadAndCropUriToSquare(context, uri)
+            bitmap?.let {
+                _uiState.value = CaptureUiState.Preview(bitmap = it)
+            }
+        }
+    }
+
+    private fun loadAndCropUriToSquare(context: Context, uri: Uri): Bitmap? {
+        val original = try {
+            ImageDecoder.decodeBitmap(ImageDecoder.createSource(context.contentResolver, uri)) { decoder, _, _ ->
+                decoder.isMutableRequired = true
+            }
+        } catch (e: Exception) {
+            return null
+        }
+
+        val edge = minOf(original.width, original.height)
+        val xOffset = (original.width - edge) / 2
+        val yOffset = (original.height - edge) / 2
+
+        return Bitmap.createBitmap(original, xOffset, yOffset, edge, edge)
     }
 
     fun resetToCamera() {

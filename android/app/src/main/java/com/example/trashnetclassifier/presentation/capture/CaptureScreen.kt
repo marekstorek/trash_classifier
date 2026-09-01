@@ -1,5 +1,8 @@
 package com.example.trashnetclassifier.presentation.capture
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -15,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -23,6 +27,13 @@ fun CaptureScreen(
     viewModel: CaptureViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let { viewModel.onImageSelected(context, it) }
+    }
 
     Scaffold(
         topBar = {
@@ -40,6 +51,11 @@ fun CaptureScreen(
                         onPhotoCaptured = { bitmap ->
                             viewModel.onPhotoCaptured(bitmap)
                         },
+                        onOpenGallery = {
+                            galleryLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        }
                     )
                 }
                 is CaptureUiState.Preview -> {
@@ -59,7 +75,6 @@ fun CaptureScreen(
         }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
