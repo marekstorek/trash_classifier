@@ -1,20 +1,51 @@
 package com.example.trashnetclassifier.data.repository
 
+import android.content.Context
 import android.graphics.Bitmap
+import com.example.trashnetclassifier.data.local.Experiment
+import com.example.trashnetclassifier.data.local.ExperimentDao
 import com.example.trashnetclassifier.domain.model.ModelResult
 import com.example.trashnetclassifier.domain.model.PredictResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
+import java.util.UUID
 import kotlin.time.Duration.Companion.milliseconds
 
-class ExperimentRepository() {
-    suspend fun uploadExperiment(bitmap: Bitmap): Result<List<ModelResult>> = withContext(Dispatchers.IO) {
+class ExperimentRepository(
+    private val context: Context,
+    private val dao: ExperimentDao,
+) {
+
+    suspend fun uploadImage(bitmap: Bitmap): Result<List<ModelResult>> = withContext(Dispatchers.IO) {
         delay(500.milliseconds)
         val response = getMockResponse()
         Result.success(response.response)
         // TODO upload real image (bitmap)
         // TODO save image and predictions to internal storage
+    }
+
+    fun saveBitmapToInternalStorage(bitmap: Bitmap): File {
+        val fileName = "experiment_${UUID.randomUUID()}.jpg"
+        val directory = File(context.filesDir, "experiments").apply {
+            if (!exists()) mkdirs()
+        }
+        val file = File(directory, fileName)
+
+        FileOutputStream(file).use { out ->
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+        }
+        return file
+    }
+
+    suspend fun saveExperiment(experiment: Experiment) {
+        dao.insert(experiment)
+    }
+
+    suspend fun updateExperiment(experiment: Experiment) {
+        dao.update(experiment)
     }
 }
 

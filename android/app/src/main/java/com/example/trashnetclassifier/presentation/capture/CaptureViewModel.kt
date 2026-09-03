@@ -6,6 +6,7 @@ import android.graphics.ImageDecoder
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.trashnetclassifier.data.local.Experiment
 import com.example.trashnetclassifier.data.repository.ExperimentRepository
 import com.example.trashnetclassifier.domain.model.ModelResult
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,14 +15,19 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 sealed interface CaptureUiState {
-    data object LiveCamera : CaptureUiState
+    val experiment: Experiment?
+    data class LiveCamera(
+        override val experiment: Experiment? = null,
+    ) : CaptureUiState
     data class Preview(
         val bitmap: Bitmap,
+        override val experiment: Experiment?,
         val isUploading: Boolean = false,
         val errorMessage: String? = null,
     ) : CaptureUiState
     data class ClassificationResult (
         val bitmap: Bitmap,
+        override val experiment: Experiment,
         val modelResults: List<ModelResult>,
         var correctClass: String? = null,
         val isCorrect: Boolean? = null
@@ -35,21 +41,21 @@ sealed interface CaptureUiState {
 }
 
 class CaptureViewModel(
-    private val repository: ExperimentRepository
+    private val repository: ExperimentRepository,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<CaptureUiState>(CaptureUiState.LiveCamera)
+    private val _uiState = MutableStateFlow<CaptureUiState>(CaptureUiState.LiveCamera())
     val uiState: StateFlow<CaptureUiState> = _uiState.asStateFlow()
 
     fun onPhotoCaptured(bitmap: Bitmap) {
-        _uiState.value = CaptureUiState.Preview(bitmap = bitmap)
+        _uiState.value = CaptureUiState.Preview(bitmap = bitmap, experiment = _uiState.value.experiment)
     }
 
     fun onImageSelected(context: Context, uri: Uri) {
         viewModelScope.launch {
             val bitmap = loadAndCropUriToSquare(context, uri)
             bitmap?.let {
-                _uiState.value = CaptureUiState.Preview(bitmap = it)
+                _uiState.value = CaptureUiState.Preview(bitmap = it, experiment = _uiState.value.experiment)
             }
         }
     }
@@ -71,19 +77,26 @@ class CaptureViewModel(
     }
 
     fun resetToCamera() {
-        _uiState.value = CaptureUiState.LiveCamera
+        _uiState.value = CaptureUiState.LiveCamera()
     }
 
     fun uploadImage(bitmap: Bitmap) {
         val currentState = _uiState.value
         if (currentState !is CaptureUiState.Preview) return
 
-        _uiState.value = currentState.copy(isUploading = true, errorMessage = null)
+        val file = repository.saveBitmapToInternalStorage(bitmap)
+        var experiment = Experiment(localImagePath = file.path)
 
+        _uiState.value = currentState.copy(isUploading = true, errorMessage = null)
         viewModelScope.launch {
-            val result = repository.uploadExperiment(bitmap)
+            repository.saveExperiment(experiment)
+
+            val result = repository.uploadImage(bitmap)
             result.onSuccess {
-                _uiState.value = CaptureUiState.ClassificationResult(bitmap, result.getOrNull()!!)
+                val modelResult = result.getOrNull()!!
+                experiment = experiment.copy(modelResults = modelResult)
+                repository.updateExperiment(experiment)
+                _uiState.value = CaptureUiState.ClassificationResult(bitmap, experiment, modelResult)
             }.onFailure { error ->
                 _uiState.value = currentState.copy(
                     isUploading = false,
@@ -97,10 +110,15 @@ class CaptureViewModel(
         val currentState = _uiState.value
         if (currentState !is CaptureUiState.ClassificationResult) return
 
-        _uiState.value = currentState.copy(correctClass = currentState.mostTrustedClassName, isCorrect = true)
+        val correctClass = currentState.mostTrustedClassName
+        _uiState.value = currentState.copy(correctClass = correctClass, isCorrect = true)
+
 
         viewModelScope.launch {
-            // TODO Save user correction locally
+            val experiment = _uiState.value.experiment?.copy(correctClass = correctClass) ?: return@launch
+            _uiState.value = currentState.copy(
+                experiment = experiment
+            )
         }
     }
 
@@ -111,7 +129,10 @@ class CaptureViewModel(
         _uiState.value = currentState.copy(correctClass = trueLabel, isCorrect = false)
 
         viewModelScope.launch {
-            // TODO Save user correction locally
+            val experiment = _uiState.value.experiment?.copy(correctClass = trueLabel) ?: return@launch
+            _uiState.value = currentState.copy(
+                experiment = experiment
+            )
         }
     }
 }

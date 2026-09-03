@@ -1,15 +1,19 @@
 package com.example.trashnetclassifier.di
 
+import com.example.trashnetclassifier.data.local.AppDatabase
 import com.example.trashnetclassifier.data.repository.ExperimentRepository
 import com.example.trashnetclassifier.presentation.capture.CaptureViewModel
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule = module {
     single<ExperimentRepository> {
-        ExperimentRepository()
+        ExperimentRepository(androidContext(), get())
     }
     viewModel {
         CaptureViewModel(get())
     }
+    single { AppDatabase.getInstance(androidContext()) }
+    single { get<AppDatabase>().experimentDao() }
 }
