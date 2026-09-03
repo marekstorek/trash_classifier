@@ -4,9 +4,8 @@ import com.google.gson.annotations.SerializedName
 
 data class PredictResponse (
     @SerializedName("response") var response: List<ModelResult>
-) {
-    val mostTrustedModelResult: ModelResult
-        get() {
-            return response.maxBy { it.bestResult.confidence }
-        }
+)
+
+fun List<ModelResult>.mostTrustedModelResult(): ModelResult{
+    return this.maxBy { it.bestResult.confidence }
 }
