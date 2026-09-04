@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.CloudUpload
@@ -63,6 +64,7 @@ fun PredictionResultView(
     onConfirmPrediction: () -> Unit,
     onCorrectLabelSelected: (String) -> Unit,
     onScanAgain: () -> Unit,
+    onGoHome: () -> Unit,
 ) {
     val scrollState = rememberScrollState()
 
@@ -109,6 +111,7 @@ fun PredictionResultView(
             onConfirmPrediction = onConfirmPrediction,
             onCorrectLabelSelected = onCorrectLabelSelected,
             onScanAgain = onScanAgain,
+            onGoHome = onGoHome,
         )
         Spacer(modifier = Modifier.height(32.dp))
     }
@@ -207,14 +210,16 @@ private fun PredictionUserFeedBackView(
     onConfirmPrediction: () -> Unit,
     onCorrectLabelSelected: (String) -> Unit,
     onScanAgain: () -> Unit,
+    onGoHome: () -> Unit,
 ) {
     var isWrong by remember { mutableStateOf(false) }
-    val submitted = state.correctClass != null
+    val submitted = state.experiment.correctClass != null
 
     if (submitted) {
         UserConfirmedView(
             isWrong = isWrong,
             onScanAgain = onScanAgain,
+            onGoHome = onGoHome,
         )
     } else if (!isWrong) {
         WaitingForUserConfirmationView(
@@ -238,6 +243,7 @@ private fun PredictionUserFeedBackView(
 private fun UserConfirmedView(
     isWrong: Boolean,
     onScanAgain: () -> Unit,
+    onGoHome: () -> Unit,
 ){
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -272,6 +278,28 @@ private fun UserConfirmedView(
             Spacer(modifier = Modifier.width(8.dp))
             Text("Scan Another Item", fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedButton(
+            onClick = onGoHome,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.History,
+                contentDescription = null,
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Return",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+
     }
 }
 
