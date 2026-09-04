@@ -12,7 +12,7 @@ interface ExperimentDao {
     fun getAll(): Flow<List<Experiment>>
 
     @Insert
-    suspend fun insert(experiment: Experiment)
+    suspend fun insert(experiment: Experiment): Long
 
     @Update
     suspend fun update(experiment: Experiment)

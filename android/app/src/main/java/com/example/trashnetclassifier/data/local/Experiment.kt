@@ -19,9 +19,9 @@ data class Experiment(
                 return ExperimentState.FailedToPredict
             } else if (correctClass == null) {
                 return ExperimentState.Unconfirmed
-            } else if (modelResults.mostTrustedModelResult().bestResult.className == correctClass) {
+            } else if (modelResults.mostTrustedModelResult().bestResult.className.equals(correctClass, ignoreCase = true)) {
                 return ExperimentState.Correct
-            } else if (correctClass in modelResults.map { it.bestResult.className }) {
+            } else if (correctClass.lowercase() in modelResults.map { it.bestResult.className.lowercase() }) {
                 return ExperimentState.OneModelWasRight
             } else {
                 return ExperimentState.Wrong

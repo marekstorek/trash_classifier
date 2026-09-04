@@ -77,6 +77,9 @@ fun CaptureScreen(
                         },
                         onScanAgain = {
                             viewModel.resetToCamera()
+                        },
+                        onGoHome = {
+                            onBack()
                         }
                     )
                 }

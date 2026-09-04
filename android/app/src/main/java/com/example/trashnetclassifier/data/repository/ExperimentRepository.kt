@@ -40,8 +40,8 @@ class ExperimentRepository(
         return file
     }
 
-    suspend fun saveExperiment(experiment: Experiment) {
-        dao.insert(experiment)
+    suspend fun saveExperiment(experiment: Experiment) : Long {
+        return dao.insert(experiment)
     }
 
     suspend fun updateExperiment(experiment: Experiment) {

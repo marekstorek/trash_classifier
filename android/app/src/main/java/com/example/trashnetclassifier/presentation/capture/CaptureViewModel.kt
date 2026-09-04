@@ -29,8 +29,6 @@ sealed interface CaptureUiState {
         val bitmap: Bitmap,
         override val experiment: Experiment,
         val modelResults: List<ModelResult>,
-        var correctClass: String? = null,
-        val isCorrect: Boolean? = null
     ) : CaptureUiState {
         val mostTrustedClassName: String
             get() {
@@ -89,7 +87,8 @@ class CaptureViewModel(
 
         _uiState.value = currentState.copy(isUploading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.saveExperiment(experiment)
+            val experimentId = repository.saveExperiment(experiment)
+            experiment = experiment.copy(id = experimentId)
 
             val result = repository.uploadImage(bitmap)
             result.onSuccess {
@@ -111,14 +110,13 @@ class CaptureViewModel(
         if (currentState !is CaptureUiState.ClassificationResult) return
 
         val correctClass = currentState.mostTrustedClassName
-        _uiState.value = currentState.copy(correctClass = correctClass, isCorrect = true)
-
+        val experiment = _uiState.value.experiment?.copy(correctClass = correctClass) ?: return
+        _uiState.value = currentState.copy(
+            experiment = experiment
+        )
 
         viewModelScope.launch {
-            val experiment = _uiState.value.experiment?.copy(correctClass = correctClass) ?: return@launch
-            _uiState.value = currentState.copy(
-                experiment = experiment
-            )
+            repository.updateExperiment(experiment)
         }
     }
 
@@ -126,13 +124,13 @@ class CaptureViewModel(
         val currentState = _uiState.value
         if (currentState !is CaptureUiState.ClassificationResult) return
 
-        _uiState.value = currentState.copy(correctClass = trueLabel, isCorrect = false)
+        val experiment = _uiState.value.experiment?.copy(correctClass = trueLabel) ?: return
+        _uiState.value = currentState.copy(
+            experiment = experiment
+        )
 
         viewModelScope.launch {
-            val experiment = _uiState.value.experiment?.copy(correctClass = trueLabel) ?: return@launch
-            _uiState.value = currentState.copy(
-                experiment = experiment
-            )
+            repository.updateExperiment(experiment)
         }
     }
 }
