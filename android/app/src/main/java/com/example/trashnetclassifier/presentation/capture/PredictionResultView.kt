@@ -1,5 +1,9 @@
 package com.example.trashnetclassifier.presentation.capture
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,7 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.CloudUpload
@@ -41,9 +45,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,6 +63,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.trashnetclassifier.domain.model.ClassPrediction
 import com.example.trashnetclassifier.domain.model.ModelResult
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -67,7 +77,7 @@ fun PredictionResultView(
     onGoHome: () -> Unit,
 ) {
     val scrollState = rememberScrollState()
-
+    val coroutineScope = rememberCoroutineScope()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -108,8 +118,26 @@ fun PredictionResultView(
         Spacer(modifier = Modifier.height(24.dp))
         PredictionUserFeedBackView(
             state = state,
-            onConfirmPrediction = onConfirmPrediction,
-            onCorrectLabelSelected = onCorrectLabelSelected,
+            onConfirmPrediction = {
+                onConfirmPrediction()
+                coroutineScope.launch {
+                    delay(500.milliseconds, )
+                    scrollState.animateScrollTo(
+                        value = scrollState.maxValue,
+                        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing)
+                    )
+                }
+            },
+            onCorrectLabelSelected = { label ->
+                onCorrectLabelSelected(label)
+                coroutineScope.launch {
+                    delay(500.milliseconds, )
+                    scrollState.animateScrollTo(
+                        value = scrollState.maxValue,
+                        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing)
+                    )
+                }
+             },
             onScanAgain = onScanAgain,
             onGoHome = onGoHome,
         )
@@ -130,7 +158,9 @@ private fun ModelResultCard(
         ),
         shape = RoundedCornerShape(16.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier
+            .padding(16.dp)
+            .animateContentSize()) {
             var expanded by remember { mutableStateOf(false) }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -171,6 +201,16 @@ private fun ClassPredictionProgressIndicator(
     prediction: ClassPrediction,
 ) {
     val isTopPrediction = index == 0
+    var animationPlayed by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        animationPlayed = true
+    }
+
+    val animatedProgress by animateFloatAsState(
+        targetValue = if (animationPlayed) prediction.confidence.toFloat() else 0f,
+        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+        label = "Confidence Animation"
+    )
 
     Column(modifier = Modifier.padding(bottom = if (isTopPrediction) 6.dp else 0.dp)) {
         if (!isTopPrediction) {
@@ -193,7 +233,7 @@ private fun ClassPredictionProgressIndicator(
         }
         Spacer(modifier = Modifier.height(6.dp))
         LinearProgressIndicator(
-            progress = { prediction.confidence.toFloat() },
+            progress = { animatedProgress },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(if (isTopPrediction) 8.dp else 4.dp)
@@ -247,7 +287,9 @@ private fun UserConfirmedView(
 ){
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp)
     ) {
         Text(
             text = if (!isWrong) "Thank you for your confirmation!" else "Thank you for your correction!",
@@ -289,7 +331,7 @@ private fun UserConfirmedView(
             shape = RoundedCornerShape(12.dp)
         ) {
             Icon(
-                imageVector = Icons.Default.History,
+                imageVector = Icons.Default.Home,
                 contentDescription = null,
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -323,7 +365,9 @@ private fun WaitingForUserConfirmationView(
         ) {
             OutlinedButton(
                 onClick = { onSetIsWrong() },
-                modifier = Modifier.weight(1f).height(56.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
             ) {
@@ -336,7 +380,9 @@ private fun WaitingForUserConfirmationView(
                 onClick = {
                     onConfirmPrediction()
                 },
-                modifier = Modifier.weight(1f).height(56.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Icon(Icons.Rounded.Check, contentDescription = null)
@@ -393,7 +439,9 @@ private fun WaitingForUserCorrectionView(
                 }
             },
             enabled = selectedLabel != null,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
             shape = RoundedCornerShape(12.dp),
         ) {
             Icon(Icons.Rounded.CloudUpload, contentDescription = null)
