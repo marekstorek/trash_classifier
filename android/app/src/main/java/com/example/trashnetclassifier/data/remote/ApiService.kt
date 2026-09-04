@@ -2,6 +2,8 @@ package com.example.trashnetclassifier.data.remote
 
 import com.example.trashnetclassifier.domain.model.PredictResponse
 import okhttp3.MultipartBody
+import retrofit2.Response
+import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
@@ -12,4 +14,7 @@ interface ApiService {
     suspend fun predict(
         @Part image: MultipartBody.Part
     ): PredictResponse
+
+    @GET("/")
+    suspend fun ping() : Response<Unit>
 }
