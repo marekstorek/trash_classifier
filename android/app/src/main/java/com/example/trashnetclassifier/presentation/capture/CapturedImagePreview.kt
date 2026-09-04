@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
 
@@ -49,7 +48,7 @@ fun CapturedImagePreview(
         Spacer(modifier = Modifier.height(32.dp))
 
         if (isUploading) {
-            CircularProgressIndicator(color = Color.White)
+            CircularProgressIndicator()
         } else {
             Row(
                 modifier = Modifier.fillMaxWidth(0.85f),

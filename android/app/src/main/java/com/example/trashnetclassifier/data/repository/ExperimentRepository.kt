@@ -4,27 +4,40 @@ import android.content.Context
 import android.graphics.Bitmap
 import com.example.trashnetclassifier.data.local.Experiment
 import com.example.trashnetclassifier.data.local.ExperimentDao
+import com.example.trashnetclassifier.data.remote.ApiService
 import com.example.trashnetclassifier.domain.model.ModelResult
 import com.example.trashnetclassifier.domain.model.PredictResponse
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
-import kotlin.time.Duration.Companion.milliseconds
 
 class ExperimentRepository(
     private val context: Context,
     private val dao: ExperimentDao,
-) {
+    private val apiService: ApiService,
+    ) {
 
-    suspend fun uploadImage(bitmap: Bitmap): Result<List<ModelResult>> = withContext(Dispatchers.IO) {
-        delay(500.milliseconds)
-        val response = getMockResponse()
-        Result.success(response.response)
-        // TODO upload real image (bitmap)
-        // TODO save image and predictions to internal storage
+    suspend fun uploadImage(bitmap: Bitmap): Pair<Result<List<ModelResult>>, String?> = withContext(Dispatchers.IO) {
+        try {
+            val imageFile = saveBitmapToInternalStorage(bitmap)
+            try {
+                val requestFile = imageFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
+                val multipartBody = MultipartBody.Part.createFormData("file", imageFile.name, requestFile)
+
+                val apiResponse = apiService.predict(multipartBody)
+
+                Pair(Result.success(apiResponse.response), imageFile.path)
+            } catch (e: Exception) {
+                Pair(Result.failure(e), imageFile.path)
+            }
+        } catch (e: Exception) {
+            Pair(Result.failure(e), null)
+        }
     }
 
     fun saveBitmapToInternalStorage(bitmap: Bitmap): File {

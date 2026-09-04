@@ -8,7 +8,7 @@ import com.example.trashnetclassifier.domain.model.mostTrustedModelResult
 @Entity(tableName = "experiments")
 data class Experiment(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val localImagePath: String,
+    val localImagePath: String? = null,
     val modelResults: List<ModelResult>? = null,
     val correctClass: String? = null,
     val timestamp: Long = System.currentTimeMillis(),

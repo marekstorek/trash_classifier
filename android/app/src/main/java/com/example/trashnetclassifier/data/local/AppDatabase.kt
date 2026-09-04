@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 
 @Database(
     entities = [Experiment::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(ExperimentTypeConverters::class)
@@ -26,7 +26,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "trashnet_database"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration(dropAllTables = true)
+                    .build()
 
                 INSTANCE = instance
                 instance

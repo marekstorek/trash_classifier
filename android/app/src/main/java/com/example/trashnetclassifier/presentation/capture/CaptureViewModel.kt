@@ -82,24 +82,31 @@ class CaptureViewModel(
         val currentState = _uiState.value
         if (currentState !is CaptureUiState.Preview) return
 
-        val file = repository.saveBitmapToInternalStorage(bitmap)
-        var experiment = Experiment(localImagePath = file.path)
-
         _uiState.value = currentState.copy(isUploading = true, errorMessage = null)
         viewModelScope.launch {
-            val experimentId = repository.saveExperiment(experiment)
-            experiment = experiment.copy(id = experimentId)
+            val pair = repository.uploadImage(bitmap)
+            val result = pair.first
+            val path = pair.second
 
-            val result = repository.uploadImage(bitmap)
             result.onSuccess {
                 val modelResult = result.getOrNull()!!
-                experiment = experiment.copy(modelResults = modelResult)
+                var experiment = Experiment(localImagePath = path)
+
+                val experimentId = repository.saveExperiment(experiment)
+                experiment = experiment.copy(id = experimentId, modelResults = modelResult)
+
                 repository.updateExperiment(experiment)
                 _uiState.value = CaptureUiState.ClassificationResult(bitmap, experiment, modelResult)
             }.onFailure { error ->
+                var experiment = Experiment(localImagePath = path)
+
+                val experimentId = repository.saveExperiment(experiment)
+                experiment = experiment.copy(id = experimentId)
+
                 _uiState.value = currentState.copy(
                     isUploading = false,
-                    errorMessage = error.localizedMessage ?: "Failed to upload image"
+                    errorMessage = error.localizedMessage ?: "Failed to upload image",
+                    experiment = experiment,
                 )
             }
         }
