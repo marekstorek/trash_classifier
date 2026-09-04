@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.trashnetclassifier.presentation.capture.CaptureScreen
+import com.example.trashnetclassifier.presentation.history.HistoryScreen
 import com.example.trashnetclassifier.presentation.home.HomeScreen
 
 @Composable
@@ -19,7 +20,7 @@ fun Navigation(
                     navController.navigate(Screen.Capture)
                 },
                 onNavigateToHistory = {
-
+                    navController.navigate(Screen.History)
                 }
             )
         }
@@ -27,6 +28,16 @@ fun Navigation(
             CaptureScreen(
                 onBack = {
                     navController.navigateUp()
+                },
+            )
+        }
+        composable<Screen.History> {
+            HistoryScreen(
+                onBack = {
+                    navController.navigateUp()
+                },
+                onExperimentClick = {
+
                 },
             )
         }

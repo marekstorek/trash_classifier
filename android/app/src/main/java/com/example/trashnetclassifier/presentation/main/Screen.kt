@@ -9,4 +9,7 @@ sealed class Screen(val route: String) {
 
     @Serializable
     object Capture : Screen("capture")
+
+    @Serializable
+    object History : Screen("history")
 }
