@@ -8,6 +8,7 @@
 *.jpeg
 *.png
 *.log
+!images/**
 
 .DS_Store
 
