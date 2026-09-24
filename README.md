@@ -82,6 +82,10 @@ It accepts an image and runs inference using both trained models.
 
 The API returns the predicted class probabilities for each model, allowing the Android application to display and compare their predictions.
 
+You can test the API directly using the interactive Swagger documentation (works best with .jpg images):
+
+https://trashnet-api-856148912863.europe-west1.run.app/docs 
+
 ## Docker
 
 The backend and trained models are packaged into a Docker container.
